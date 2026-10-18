@@ -2,6 +2,21 @@ import { keyOf, shiftDate, validateData, dayTotal } from './model.js';
 const $=s=>document.querySelector(s), KEY='daily-meal-log-v1';
 let data={goal:2000,days:{}}, selected=keyOf(new Date()), edit=null;
 try{const saved=localStorage.getItem(KEY);if(saved)data=validateData(JSON.parse(saved));}catch{announce('저장된 기록을 불러오지 못했습니다. 백업 파일을 확인해 주세요.');}
+// Apply conversation records once per browser; retain later edits and deletions.
+try {
+  const batchKey='meal-import-2026-10-18-lunch-v1';
+  if(!localStorage.getItem(batchKey)) {
+    const day=data.days['2026-10-18']??={items:[],note:''};
+    const records=[
+      {id:'20261018-lunch-gimbap',meal:'lunch',name:'김밥 1줄 (칼로리 추정)',calories:450},
+      {id:'20261018-lunch-chicken',meal:'lunch',name:'닭가슴살 떡볶이맛 (칼로리 추정)',calories:130},
+      {id:'20261018-lunch-tiger',meal:'lunch',name:'타이거 맥주 500ml (칼로리 추정)',calories:215}
+    ];
+    for(const record of records)if(!day.items.some(item=>item.id===record.id))day.items.push(record);
+    localStorage.setItem(KEY,JSON.stringify(data));
+    localStorage.setItem(batchKey,'1');
+  }
+}catch{announce('기록 저장에 실패했습니다. 브라우저 저장 공간을 확인해 주세요.');}
 const groups=[['breakfast','아침','BREAKFAST'],['lunch','점심','LUNCH'],['dinner','저녁','DINNER'],['snack','간식','SNACK']];
 function announce(message){$('#status').textContent=message;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data));announce('브라우저에 저장되었습니다.');}catch{announce('저장 공간에 접근할 수 없습니다. 기록을 내보내 백업하세요.');}}
